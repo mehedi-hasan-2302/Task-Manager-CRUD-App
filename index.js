@@ -62,3 +62,33 @@ app.get('/tasks/:id', (req, res) => {
 });
 
 
+app.put('/tasks/:id', async (req, res) => {
+    const taskId = parseInt(req.params.id);
+    const { title, description, status } = req.body;
+    const taskIndex = tasks.findIndex(task => task.id === taskId);
+    if (taskIndex === -1) {
+        return res.status(404).json({ error: 'Task not found.' });
+    }
+
+    tasks[taskIndex] = { ...tasks[taskIndex], title, description, status };
+    await saveTasks(); 
+    res.json(tasks[taskIndex]);
+});
+
+
+app.delete('/tasks/:id', async (req, res) => {
+    const taskId = parseInt(req.params.id);
+    const taskIndex = tasks.findIndex(task => task.id === taskId);
+    if (taskIndex === -1) {
+        return res.status(404).json({ error: 'Task not found.' });
+    }
+    
+    tasks.splice(taskIndex, 1);
+    await saveTasks(); 
+    res.sendStatus(204);
+});
+
+
+app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+});
