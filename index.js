@@ -1,13 +1,12 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const fs = require('fs/promises'); 
+const fs = require('fs').promises;
 
 const app = express();
 const PORT = 3000;
 const TASKS_FILE = 'tasks.json';
 
 app.use(bodyParser.json());
-
 
 let tasks = [];
 
@@ -20,7 +19,6 @@ async function loadTasks() {
     }
 }
 
-
 async function saveTasks() {
     try {
         await fs.writeFile(TASKS_FILE, JSON.stringify(tasks, null, 2));
@@ -29,8 +27,8 @@ async function saveTasks() {
     }
 }
 
-
 loadTasks();
+
 
 app.post('/tasks', async (req, res) => {
     const { title, description, status } = req.body;
@@ -42,7 +40,7 @@ app.post('/tasks', async (req, res) => {
     const newTask = { id, title, description, status };
     tasks.push(newTask);
 
-    await saveTasks(); 
+    await saveTasks();
     res.status(200).json(newTask);
 });
 
@@ -71,7 +69,7 @@ app.put('/tasks/:id', async (req, res) => {
     }
 
     tasks[taskIndex] = { ...tasks[taskIndex], title, description, status };
-    await saveTasks(); 
+    await saveTasks();
     res.json(tasks[taskIndex]);
 });
 
@@ -82,12 +80,20 @@ app.delete('/tasks/:id', async (req, res) => {
     if (taskIndex === -1) {
         return res.status(404).json({ error: 'Task not found.' });
     }
-    
+
     tasks.splice(taskIndex, 1);
-    await saveTasks(); 
+    await saveTasks();
     res.sendStatus(204);
 });
 
+app.get('/tasks/sortById', (req, res) => {
+    try {
+        const sortedTask = tasks.sort((a, b) => a.id - b.id);
+        res.status(200).json(sortedTask);
+    } catch (error) {
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
 
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
