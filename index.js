@@ -30,6 +30,7 @@ async function saveTasks() {
 loadTasks();
 
 
+// post tasks
 app.post('/tasks', async (req, res) => {
     const { title, description, status } = req.body;
     if (!title || !status) {
@@ -45,11 +46,58 @@ app.post('/tasks', async (req, res) => {
 });
 
 
+
+//get all tasks
 app.get('/tasks', (req, res) => {
     res.json(tasks);
 });
 
 
+
+//get tasks sorted according to the id
+app.get('/tasks/sortById', (req, res) => {
+    try {
+        const sortedTask = tasks.slice().sort((a, b) => a.id - b.id);
+        res.status(200).json(sortedTask);
+    } catch (error) {
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
+
+
+//get tasks sorted according to their status
+app.get('/tasks/sortByStatus', (req, res) => {
+    try {
+        const sortedTasks = tasks.slice().sort((a, b) => a.status.localeCompare(b.status));
+        res.status(200).json(sortedTasks);
+    } catch (error) {
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
+
+
+// Search any task by title or description
+app.get('/tasks/search', (req, res) => {
+    const { title, description } = req.body;
+
+    if (!title && !description) {
+        return res.status(400).json({ error: 'Title or description is required in the request body.' });
+    }
+
+    const searchResults = tasks.filter(task =>
+        (!title || task.title.toLowerCase().includes(title.toLowerCase())) &&
+        (!description || (task.description && task.description.toLowerCase().includes(description.toLowerCase())))
+    );
+
+    if (searchResults.length === 0) {
+        return res.status(404).json({ message: 'No tasks found matching the search criteria.' });
+    }
+
+    res.status(200).json(searchResults);
+});
+
+
+//get a single task by their id
 app.get('/tasks/:id', (req, res) => {
     const taskId = parseInt(req.params.id);
     const task = tasks.find(task => task.id === taskId);
@@ -60,6 +108,8 @@ app.get('/tasks/:id', (req, res) => {
 });
 
 
+
+//update a task
 app.put('/tasks/:id', async (req, res) => {
     const taskId = parseInt(req.params.id);
     const { title, description, status } = req.body;
@@ -74,6 +124,8 @@ app.put('/tasks/:id', async (req, res) => {
 });
 
 
+
+//delete a task
 app.delete('/tasks/:id', async (req, res) => {
     const taskId = parseInt(req.params.id);
     const taskIndex = tasks.findIndex(task => task.id === taskId);
@@ -86,14 +138,8 @@ app.delete('/tasks/:id', async (req, res) => {
     res.sendStatus(204);
 });
 
-app.get('/tasks/sortById', (req, res) => {
-    try {
-        const sortedTask = tasks.sort((a, b) => a.id - b.id);
-        res.status(200).json(sortedTask);
-    } catch (error) {
-        res.status(500).json({ message: "Internal server error" });
-    }
-});
+
+
 
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
